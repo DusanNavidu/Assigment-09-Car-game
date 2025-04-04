@@ -1,0 +1,31 @@
+.road-selection-page{
+    width: 100%;
+}
+body{
+    margin: 0;
+}
+#road-selection-page-background-img{
+    width: 100%;
+    height: 99vh;
+    object-fit: cover;
+    position: relative;
+}
+.game-name{
+    position: absolute;
+    top: 5%;
+    left: 10%;
+}
+.way-selcion{
+    position: absolute;
+    top: 40%;
+    left: 10%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+#one-way-image{
+    width: 300px;
+}
+#two-way-image{
+    width: 300px;
+}

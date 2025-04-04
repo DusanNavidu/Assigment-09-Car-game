@@ -1,22 +1,28 @@
-let cabSpeed = 1;
-let cabIntervalTime = 5000;
+function startCountdown(finalText = "Let's Go", callback) {
+    const steps = ['three', 'two', 'one', 'go'];
+    let index = 0;
 
-let busSpeed = 0.7;
-let busIntervalTime = 8000;
+    $('#go').text(finalText);
 
-let primeMoverSpeed = 0.6;
-let primeMoverIntervalTime = 10000;
+    function showNext() {
+        if (index > 0) {
+            $('#' + steps[index - 1]).hide();
+        }
 
-let gameLoop;
-let gameRunning = true;
+        if (index < steps.length) {
+            const el = $('#' + steps[index]);
+            el.show().addClass('countdown');
+            setTimeout(() => {
+                el.hide();
+                index++;
+                showNext();
+            }, 1000);
+        } else {
+            if (callback) callback();
+        }
+    }
 
-const lanes = [0, 1, 2, 3];
-const lanePositions = [0, 100, 200, 300];
-let activeObstaclesInLane = [false, false, false, false];
-function getAvailableLane() {
-    let available = lanes.filter((lane, i) => !activeObstaclesInLane[i]);
-    if (available.length === 0) return null; 
-    return available[Math.floor(Math.random() * available.length)];
+    showNext();
 }
 
 function Car(element) {
@@ -42,166 +48,39 @@ function Car(element) {
     };
 }
 
-function checkCollision(car, obstacle, type) {
-    let carPos = car.position();
-    let obstaclePos = obstacle.position();
-    const carWidth = 50;
+let score = 0;
+let timeElapsed = 0;
+let highScore = localStorage.getItem('highScore') || 0;
+let gameLoop;
+let gameRunning = true;
 
-    const isColliding =
-        obstaclePos.top + obstacle.height() >= carPos.top &&
-        obstaclePos.left < carPos.left + carWidth &&
-        obstaclePos.left + obstacle.width() > carPos.left;
+let cabSpeed = 1;
+let cabIntervalTime = 5000;
 
-    if (isColliding) {
-        switch (type) {
-            case 'cab':
-                handleCabCollision();
-                break;
-            case 'bus':
-                handleBusCollision();
-                break;
-            case 'primeMover':
-                handlePrimeMoverCollision();
-                break;
-        }
-    }
-    
-    return isColliding;
+let busSpeed = 1.2;
+let busIntervalTime = 5500;
+
+let primeMoverSpeed = 1.4;
+let primeMoverIntervalTime = 6000;
+
+const lanes = [0, 1, 2, 3];
+const lanePositions = [0, 100, 200, 300];
+let activeObstaclesInLane = [false, false, false, false];
+
+function getAvailableLane() {
+    let available = lanes.filter((lane, i) => !activeObstaclesInLane[i]);
+    if (available.length === 0) return null;
+    return available[Math.floor(Math.random() * available.length)];
 }
 
-function handleCabCollision() {
-    console.log("You hit a cab! Penalty: -5 points.");
-    gameOver(); 
+function updateScore(amount) {
+    score += amount;
+    $('#score').text(score);
 }
 
-function handleBusCollision() {
-    console.log("You hit a bus! Penalty: -10 points.");
-    gameOver(); 
-}
-
-function handlePrimeMoverCollision() {
-    console.log("You hit a prime mover! Penalty: -20 points.");
-    gameOver(); 
-}
-
-function CabObstacle() {
-    this.lane = getAvailableLane();
-    if (this.lane === null) return; 
-
-    activeObstaclesInLane[this.lane] = true;
-
-    this.element = $('<div class="cab"></div>');
-    $('#gameContainer').append(this.element);
-
-    this.positionY = -100;
-    this.positionX = lanePositions[this.lane];
-    this.element.css({ left: this.positionX + 'px', top: this.positionY + 'px' });
-
-    this.fall = () => {
-        const that = this;
-        let fallInterval = setInterval(() => {
-            if (!gameRunning) {
-                clearInterval(fallInterval);
-                that.element.remove();
-                activeObstaclesInLane[that.lane] = false;
-                return;
-            }
-
-            that.positionY += cabSpeed;
-            that.element.css('top', that.positionY + 'vh');
-
-            if (that.positionY > 80) {
-                clearInterval(fallInterval);
-                that.element.remove();
-                activeObstaclesInLane[that.lane] = false;
-            }
-
-            if (checkCollision($('#playerCar'), that.element, 'cab')) { // Pass 'cab' as the type
-                clearInterval(fallInterval);
-                activeObstaclesInLane[that.lane] = false;
-            }
-        }, 30);
-    };
-}
-
-function BusObstacle() {
-    this.lane = getAvailableLane();
-    if (this.lane === null) return;
-
-    activeObstaclesInLane[this.lane] = true;
-
-    this.element = $('<div class="bus"></div>');
-    $('#gameContainer').append(this.element);
-
-    this.positionY = -100;
-    this.positionX = lanePositions[this.lane];
-    this.element.css({ left: this.positionX + 'px', top: this.positionY + 'px' });
-
-    this.fall = () => {
-        const that = this;
-        let fallInterval = setInterval(() => {
-            if (!gameRunning) {
-                clearInterval(fallInterval);
-                that.element.remove();
-                activeObstaclesInLane[that.lane] = false;
-                return;
-            }
-
-            that.positionY += busSpeed;
-            that.element.css('top', that.positionY + 'vh');
-
-            if (that.positionY > 80) {
-                clearInterval(fallInterval);
-                that.element.remove();
-                activeObstaclesInLane[that.lane] = false;
-            }
-
-            if (checkCollision($('#playerCar'), that.element, 'bus')) { // Pass 'bus' as the type
-                clearInterval(fallInterval);
-                activeObstaclesInLane[that.lane] = false;
-            }
-        }, 30);
-    };
-}
-
-function PrimeMoverObstacle() {
-    this.lane = getAvailableLane();
-    if (this.lane === null) return;
-
-    activeObstaclesInLane[this.lane] = true;
-
-    this.element = $('<div class="primeMover"></div>');
-    $('#gameContainer').append(this.element);
-
-    this.positionY = -100;
-    this.positionX = lanePositions[this.lane];
-    this.element.css({ left: this.positionX + 'px', top: this.positionY + 'px' });
-
-    this.fall = () => {
-        const that = this;
-        let fallInterval = setInterval(() => {
-            if (!gameRunning) {
-                clearInterval(fallInterval);
-                that.element.remove();
-                activeObstaclesInLane[that.lane] = false;
-                return;
-            }
-
-            that.positionY += primeMoverSpeed;
-            that.element.css('top', that.positionY + 'vh');
-
-            if (that.positionY > 80) {
-                clearInterval(fallInterval);
-                that.element.remove();
-                activeObstaclesInLane[that.lane] = false;
-            }
-
-            if (checkCollision($('#playerCar'), that.element, 'primeMover')) { // Pass 'primeMover' as the type
-                clearInterval(fallInterval);
-                activeObstaclesInLane[that.lane] = false;
-            }
-        }, 30);
-    };
+function updateTime() {
+    timeElapsed++;
+    $('#time').text(timeElapsed);
 }
 
 function stopScrollingLines() {
@@ -213,9 +92,17 @@ function stopScrollingLines() {
 
 function gameOver() {
     gameRunning = false;
-    stopScrollingLines();  // Stop the scrolling lines
+    stopScrollingLines();
     $('#gameOverScreen').fadeIn();
     $('#overlay').show();
+
+    if (score > highScore) {
+        localStorage.setItem('highScore', score);
+        $('#recordMessage').text('🎉 New Record!');
+    } else {
+        $('#recordMessage').text('');
+    }
+
     clearInterval(gameLoop);
 }
 
@@ -225,53 +112,126 @@ function restartGame() {
     $('#playerCar').css('left', '175px');
     $('.cab, .bus, .primeMover').remove();
 
-    // Restart the animations
     $('#road-white-line .white-line-1').css('animation', 'scrollLineOne 2s linear infinite');
     $('#road-white-line .white-line-2').css('animation', 'scrollLineTwo 2s linear infinite');
     $('#road-white-line-right .white-line-1').css('animation', 'scrollLineOne 2s linear infinite');
     $('#road-white-line-right .white-line-2').css('animation', 'scrollLineTwo 2s linear infinite');
 
+    score = 0;
+    timeElapsed = 0;
+    $('#score').text(score);
+    $('#time').text(timeElapsed);
+    $('#recordMessage').text('');
+
     cabSpeed = 1;
-    busSpeed = 0.7;
-    primeMoverSpeed = 0.6;
+    busSpeed = 1.2;
+    primeMoverSpeed = 1.4;
     cabIntervalTime = 8000;
     busIntervalTime = 10000;
     primeMoverIntervalTime = 13000;
     gameRunning = true;
 
-    if (Array.isArray(gameLoop)) {
-        gameLoop.forEach(loop => clearInterval(loop));
-    }
-    startGameLoop();
+    startCountdown("Play Again", () => {
+        startGameLoop();
+    });
 }
 
+function checkCollision(car, obstacle, type) {
+    let carPos = car.position();
+    let obstaclePos = obstacle.position();
+    const carWidth = 50;
+
+    const isColliding =
+        obstaclePos.top + obstacle.height() >= carPos.top &&
+        obstaclePos.left < carPos.left + carWidth &&
+        obstaclePos.left + obstacle.width() > carPos.left;
+
+    if (isColliding) {
+        gameOver();
+    }
+
+    return isColliding;
+}
+
+function createObstacle(type, speed, interval, className) {
+    const obstacle = function () {
+        this.lane = getAvailableLane();
+        if (this.lane === null) return;
+
+        activeObstaclesInLane[this.lane] = true;
+        this.element = $('<div class="' + className + '"></div>');
+        $('#gameContainer').append(this.element);
+
+        this.positionY = -100;
+        this.positionX = lanePositions[this.lane];
+        this.element.css({ left: this.positionX + 'px', top: this.positionY + 'px' });
+
+        this.fall = () => {
+            const that = this;
+            let fallInterval = setInterval(() => {
+                if (!gameRunning) {
+                    clearInterval(fallInterval);
+                    that.element.remove();
+                    activeObstaclesInLane[that.lane] = false;
+                    return;
+                }
+
+                that.positionY += speed;
+                that.element.css('top', that.positionY + 'vh');
+
+                if (that.positionY > 80) {
+                    clearInterval(fallInterval);
+                    that.element.remove();
+                    activeObstaclesInLane[that.lane] = false;
+                    updateScore(10);
+                }
+
+                if (checkCollision($('#playerCar'), that.element, type)) {
+                    clearInterval(fallInterval);
+                    activeObstaclesInLane[that.lane] = false;
+                }
+            }, 30);
+        };
+    };
+
+    return () => {
+        let newObs = new obstacle();
+        if (newObs.lane !== null) newObs.fall();
+    };
+}
+
+const spawnCab = createObstacle('cab', cabSpeed, cabIntervalTime, 'cab');
+const spawnBus = createObstacle('bus', busSpeed, busIntervalTime, 'bus');
+const spawnPM = createObstacle('primeMover', primeMoverSpeed, primeMoverIntervalTime, 'primeMover');
 
 function startGameLoop() {
-    let cabLoop = setInterval(() => {
-        let newCab = new CabObstacle();
-        if (newCab.lane !== null) newCab.fall();
+    timeElapsed = 0;
+    score = 0;
+    $('#score').text(score);
+    $('#time').text(timeElapsed);
+    $('#recordMessage').text('');
 
-        if (cabSpeed < 15) cabSpeed += 0.1;
-    }, cabIntervalTime);
+    setInterval(updateTime, 1000);
+    gameLoop = [
+        setInterval(spawnCab, cabIntervalTime),
+        setInterval(spawnBus, busIntervalTime),
+        setInterval(spawnPM, primeMoverIntervalTime)
+    ];
 
-    let busLoop = setInterval(() => {
-        let newBus = new BusObstacle();
-        if (newBus.lane !== null) newBus.fall();
+    setInterval(() => {
+        if (gameRunning) {
+            cabSpeed += 0.05;
+            busSpeed += 0.05;
+            primeMoverSpeed += 0.05;
 
-        if (busSpeed < 10) busSpeed += 0.05;
-    }, busIntervalTime);
-
-    let primeMoverLoop = setInterval(() => {
-        let newPM = new PrimeMoverObstacle();
-        if (newPM.lane !== null) newPM.fall();
-
-        if (primeMoverSpeed < 8) primeMoverSpeed += 0.03;
-    }, primeMoverIntervalTime);
-
-    gameLoop = [cabLoop, busLoop, primeMoverLoop];
+            cabIntervalTime = Math.max(3000, cabIntervalTime - 50);
+            busIntervalTime = Math.max(3500, busIntervalTime - 50);
+            primeMoverIntervalTime = Math.max(4000, primeMoverIntervalTime - 50);
+        }
+    }, 10000);
 }
 
-$(document).ready(function () {
+$(document).ready(() => {
     let playerCar = new Car('#playerCar');
 
     $(document).on('keydown', function (e) {
@@ -284,5 +244,7 @@ $(document).ready(function () {
         }
     });
 
-    startGameLoop();
+    startCountdown("Let's Go", () => {
+        startGameLoop();
+    });
 });
