@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Car Game</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        #gameContainer {
+            width: 400px;
+            height: 600px;
+            background: #ccc;
+            position: relative;
+            overflow: hidden;
+            margin: auto;
+            border: 2px solid black;
+        }
+        .car {
+            width: 50px;
+            height: 100px;
+            background: red;
+            position: absolute;
+            bottom: 10px;
+            left: 175px;
+        }
+        .obstacle {
+            width: 50px;
+            height: 100px;
+            background: black;
+            position: absolute;
+            top: -100px;
+        }
+        #gameOverScreen {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Car Game</h1>
+    <p>Use Left/Right Arrow Keys to Move</p>
+    <div id="gameContainer">
+        <div class="car" id="playerCar"></div>
+        <div id="gameOverScreen">
+            <h2>Game Over</h2>
+            <button onclick="restartGame()">Play Again</button>
+        </div>
+    </div>
+    <script>
+        function Car(element) {
+            this.element = $(element);
+            this.positionX = 175;
+            this.moveLeft = function() {
+                if (this.positionX > 0) {
+                    this.positionX -= 25;
+                    this.updatePosition();
+                }
+            };
+            this.moveRight = function() {
+                if (this.positionX < 350) {
+                    this.positionX += 25;
+                    this.updatePosition();
+                }
+            };
+            this.updatePosition = function() {
+                this.element.css('left', this.positionX + 'px');
+            };
+        }
+
+        function Obstacle() {
+            this.element = $('<div class="obstacle"></div>');
+            $('#gameContainer').append(this.element);
+            this.positionY = -100;
+            this.positionX = Math.floor(Math.random() * 350);
+            this.element.css({ left: this.positionX + 'px', top: this.positionY + 'px' });
+            this.fall = function() {
+                let that = this;
+                let fallInterval = setInterval(function() {
+                    that.positionY += 5;
+                    that.element.css('top', that.positionY + 'px');
+                    if (that.positionY > 600) {
+                        clearInterval(fallInterval);
+                        that.element.remove();
+                    }
+                    if (checkCollision($('#playerCar'), that.element)) {
+                        clearInterval(fallInterval);
+                        gameOver();
+                    }
+                }, 30);
+            };
+        }
+
+        function checkCollision(car, obstacle) {
+            let carPos = car.position();
+            let obsPos = obstacle.position();
+            return (
+                obsPos.top + 100 >= carPos.top &&
+                obsPos.left < carPos.left + 50 &&
+                obsPos.left + 50 > carPos.left
+            );
+        }
+
+        function gameOver() {
+            $('#gameOverScreen').show();
+            $('.obstacle').remove();
+            clearInterval(gameLoop);
+        }
+
+        function restartGame() {
+            $('#gameOverScreen').hide();
+            $('#playerCar').css('left', '175px');
+            gameLoop = setInterval(function() {
+                let obstacle = new Obstacle();
+                obstacle.fall();
+            }, 2000);
+        }
+
+        $(document).ready(function() {
+            let playerCar = new Car('#playerCar');
+            $(document).on('keydown', function(e) {
+                if (e.key === 'ArrowLeft') {
+                    playerCar.moveLeft();
+                } else if (e.key === 'ArrowRight') {
+                    playerCar.moveRight();
+                }
+            });
+            gameLoop = setInterval(function() {
+                let obstacle = new Obstacle();
+                obstacle.fall();
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
