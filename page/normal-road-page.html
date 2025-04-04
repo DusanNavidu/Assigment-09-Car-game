@@ -4,102 +4,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Car Game</title>
-    <style>
-        body {
-            text-align: center;
-            font-family: Arial, sans-serif;
-        }
-        #gameContainer {
-            width: 400px;
-            height: 80vh;
-            position: relative;
-            overflow: hidden;
-            margin: auto;
-            border: 2px solid black;
-        }
-        #road-img{
-            width: 400px;
-            height: 80vh;
-        }
-        .car {
-            width: 50px;
-            height: 100px;
-            position: absolute;
-            object-fit: contain;
-            left: 65%;
-            bottom: 10px;
-            transform: translateX(-65%);
-        }
-        .primeMover {
-            width: 50px;
-            height: 250px;
-            object-fit: contain;
-            background-image: url(/assets/image/prime-mover.png);
-            background-size: contain; 
-            background-repeat: no-repeat;
-            background-position: center;
-            position: absolute;
-            top: -100px;
-        }
-        .bus {
-            width: 50px;
-            height: 150px;
-            object-fit: contain;
-            background-image: url(/assets/image/bus.png);
-            background-size: contain; 
-            background-repeat: no-repeat;
-            background-position: center;
-            position: absolute;
-            top: -100px;
-        }
-        .cab {
-            width: 50px;
-            height: 100px;
-            object-fit: contain;
-            background-image: url(/assets/image/cab.png);
-            background-size: contain; 
-            background-repeat: no-repeat;
-            background-position: center;
-            position: absolute;
-            top: -100px;
-        }
-        #gameOverScreen {
-            display: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-        }
-        #overlay {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            top: 0;
-            left: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 5;
-            display: none;
-        }
-    </style>
+    <link rel="stylesheet" href="/css/normal-road.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <h1>Car Game</h1>
-    <p>Use Left/Right Arrow Keys to Move</p>
-    <div id="gameContainer">
-        <img id="road-img" src="/assets/image/360_F_603506362_EmGPA1cjaRZZAsxxwVMESOx4EtFc0xQK.jpg" alt="">
-        <!-- <div class="car" id="playerCar"> -->
-            <img class="car" id="playerCar" src="/assets/image/racing-car-white.png" alt="">
-        </div>
-        <div id="gameOverScreen">
-            <h2>Game Over</h2>
-            <button onclick="restartGame()">Play Again</button>
-        </div>
-    </div>
+    <main>
+        <section class="normal-road-page">
+            <ul class="game-name">
+                <li>T</li>
+                <li>R</li>
+                <li>A</li>
+                <li>F</li>
+                <li>F</li>
+                <li>I</li>
+                <li>C</li>
+                <li>&nbsp;</li>
+                <li>R</li>
+                <li>A</li>
+                <li>C</li>
+                <li>I</li>
+                <li>N</li>
+                <li>G</li>
+            </ul>
+            <div id="gameContainer">
+                <div class="road-background">
+                    <div class="road-lane">
+                        <div class="mid-yellow-line" id="mid-yellow-line-1"></div>
+                        <div class="mid-yellow-line" id="mid-yellow-line-2"></div>
+                        <div id="road-white-line">
+                            <div class="white-line-1"></div>
+                            <div class="white-line-2"></div>
+                        </div>
+                        <div id="road-white-line-right">
+                            <div class="white-line-1"></div>
+                            <div class="white-line-2"></div>
+                        </div>
+                    </div>
+                </div>
+                <img class="car" id="playerCar" src="/assets/image/racing-car-white.png" alt="racing car palayer">
+            </div>
+                <div id="gameOverScreen">
+                    <h2>Game Over</h2>
+                    <button onclick="restartGame()">Play Again</button>
+                </div>
+            </div>
+        </section>
+    </main>
+    
     <script src="/js/normal-road.js"></script>
 </body>
 </html>

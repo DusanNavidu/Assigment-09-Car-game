@@ -18,6 +18,10 @@ body{
     background-color: black;
     padding: 5px 20px;
     border-radius: 30px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 .game-name li{
     list-style: none;
