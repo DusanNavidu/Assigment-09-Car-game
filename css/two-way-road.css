@@ -332,23 +332,9 @@ li:nth-child(2){
         opacity: 1;
     }
 }
-#home{
-    width: 100px;
+#play{
+    display: none;
 }
-#logout{
-    width: 100px;
-}
-#home:hover{
-    scale: 1.1;
-}
-#logout:hover{
-    scale: 1.1;
-}
-#icon-set{
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    position: absolute;
-    top: 15%;
-    right: 5%;
+#mute{
+    display: none;
 }

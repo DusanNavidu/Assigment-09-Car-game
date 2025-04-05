@@ -126,7 +126,7 @@ function CabObstacle() {
             that.positionY += speed;
             that.element.css('top', that.positionY + 'vh');
 
-            if (that.positionY > 80) {
+            if (that.positionY > 100) {
                 clearInterval(fallInterval);
                 that.element.remove();
                 activeObstaclesInLane[that.lane] = false;
@@ -172,7 +172,7 @@ function BusObstacle() {
             that.positionY += speed;
             that.element.css('top', that.positionY + 'vh');
 
-            if (that.positionY > 80) {
+            if (that.positionY > 100) {
                 clearInterval(fallInterval);
                 that.element.remove();
                 activeObstaclesInLane[that.lane] = false;
@@ -218,7 +218,7 @@ function PrimeMoverObstacle() {
             that.positionY += speed;
             that.element.css('top', that.positionY + 'vh');
 
-            if (that.positionY > 80) {
+            if (that.positionY > 100) {
                 clearInterval(fallInterval);
                 that.element.remove();
                 activeObstaclesInLane[that.lane] = false;

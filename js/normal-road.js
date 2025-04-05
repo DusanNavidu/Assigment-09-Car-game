@@ -51,8 +51,10 @@ function Car(element) {
 let score = 0;
 let timeElapsed = 0;
 let highScore = localStorage.getItem('highScore') || 0;
-let gameLoop;
+let gameLoop = [];
+let timeInterval;
 let gameRunning = true;
+let gamePaused = false;
 
 let cabSpeed = 1;
 let cabIntervalTime = 5000;
@@ -66,6 +68,11 @@ let primeMoverIntervalTime = 6000;
 const lanes = [0, 1, 2, 3];
 const lanePositions = [0, 100, 200, 300];
 let activeObstaclesInLane = [false, false, false, false];
+let activeObstacles = [];
+
+let gameAudio = new Audio('/assets/audio/game-music-player-console-8bit-background-intro-theme-297305.mp3');
+gameAudio.loop = true;
+gameAudio.volume = 0.5;
 
 function getAvailableLane() {
     let available = lanes.filter((lane, i) => !activeObstaclesInLane[i]);
@@ -79,22 +86,28 @@ function updateScore(amount) {
 }
 
 function updateTime() {
-    timeElapsed++;
-    $('#time').text(timeElapsed);
+    if (!gamePaused) {
+        timeElapsed++;
+        $('#time').text(timeElapsed);
+    }
 }
 
 function stopScrollingLines() {
-    $('#road-white-line .white-line-1').css('animation', 'none');
-    $('#road-white-line .white-line-2').css('animation', 'none');
-    $('#road-white-line-right .white-line-1').css('animation', 'none');
-    $('#road-white-line-right .white-line-2').css('animation', 'none');
+    $('#road-white-line .white-line-1, #road-white-line .white-line-2, #road-white-line-right .white-line-1, #road-white-line-right .white-line-2')
+        .css('animation', 'none');
+}
+
+function resumeScrollingLines() {
+    $('#road-white-line .white-line-1, #road-white-line-right .white-line-1')
+        .css('animation', 'scrollLineOne 2s linear infinite');
+    $('#road-white-line .white-line-2, #road-white-line-right .white-line-2')
+        .css('animation', 'scrollLineTwo 2s linear infinite');
 }
 
 function gameOver() {
     gameRunning = false;
     stopScrollingLines();
     $('#gameOverScreen').fadeIn();
-    $('#overlay').show();
 
     if (score > highScore) {
         localStorage.setItem('highScore', score);
@@ -103,19 +116,16 @@ function gameOver() {
         $('#recordMessage').text('');
     }
 
-    clearInterval(gameLoop);
+    clearInterval(timeInterval);
+    gameLoop.forEach(clearInterval);
+    gameAudio.pause();
 }
 
 function restartGame() {
     $('#gameOverScreen').hide();
-    $('#overlay').hide();
     $('#playerCar').css('left', '175px');
     $('.cab, .bus, .primeMover').remove();
-
-    $('#road-white-line .white-line-1').css('animation', 'scrollLineOne 2s linear infinite');
-    $('#road-white-line .white-line-2').css('animation', 'scrollLineTwo 2s linear infinite');
-    $('#road-white-line-right .white-line-1').css('animation', 'scrollLineOne 2s linear infinite');
-    $('#road-white-line-right .white-line-2').css('animation', 'scrollLineTwo 2s linear infinite');
+    resumeScrollingLines();
 
     score = 0;
     timeElapsed = 0;
@@ -129,10 +139,18 @@ function restartGame() {
     cabIntervalTime = 8000;
     busIntervalTime = 10000;
     primeMoverIntervalTime = 13000;
+
     gameRunning = true;
+    gamePaused = false;
+    activeObstacles = [];
+
+    $('#pause').show();
+    $('#play').hide();
 
     startCountdown("Play Again", () => {
         startGameLoop();
+        gameAudio.currentTime = 0;
+        gameAudio.play();
     });
 }
 
@@ -164,39 +182,40 @@ function createObstacle(type, speed, interval, className) {
 
         this.positionY = -100;
         this.positionX = lanePositions[this.lane];
-        this.element.css({ left: this.positionX + 'px', top: this.positionY + 'px' });
+        this.element.css({ left: this.positionX + 'px', top: this.positionY + 'vh' });
+
+        const that = this;
 
         this.fall = () => {
-            const that = this;
             let fallInterval = setInterval(() => {
-                if (!gameRunning) {
-                    clearInterval(fallInterval);
-                    that.element.remove();
-                    activeObstaclesInLane[that.lane] = false;
-                    return;
-                }
+                if (!gameRunning || gamePaused) return;
 
                 that.positionY += speed;
                 that.element.css('top', that.positionY + 'vh');
 
-                if (that.positionY > 80) {
+                if (that.positionY > 100) {
                     clearInterval(fallInterval);
                     that.element.remove();
                     activeObstaclesInLane[that.lane] = false;
                     updateScore(10);
+                    activeObstacles = activeObstacles.filter(obj => obj !== that);
                 }
 
                 if (checkCollision($('#playerCar'), that.element, type)) {
                     clearInterval(fallInterval);
                     activeObstaclesInLane[that.lane] = false;
+                    activeObstacles = activeObstacles.filter(obj => obj !== that);
                 }
             }, 30);
+            that.fallInterval = fallInterval;
         };
+
+        this.fall();
+        activeObstacles.push(this);
     };
 
     return () => {
         let newObs = new obstacle();
-        if (newObs.lane !== null) newObs.fall();
     };
 }
 
@@ -211,7 +230,8 @@ function startGameLoop() {
     $('#time').text(timeElapsed);
     $('#recordMessage').text('');
 
-    setInterval(updateTime, 1000);
+    timeInterval = setInterval(updateTime, 1000);
+
     gameLoop = [
         setInterval(spawnCab, cabIntervalTime),
         setInterval(spawnBus, busIntervalTime),
@@ -219,7 +239,7 @@ function startGameLoop() {
     ];
 
     setInterval(() => {
-        if (gameRunning) {
+        if (gameRunning && !gamePaused) {
             cabSpeed += 0.05;
             busSpeed += 0.05;
             primeMoverSpeed += 0.05;
@@ -233,9 +253,11 @@ function startGameLoop() {
 
 $(document).ready(() => {
     let playerCar = new Car('#playerCar');
+    $('#highScore').text(highScore);
+    $('#play').hide();
 
     $(document).on('keydown', function (e) {
-        if (!gameRunning) return;
+        if (!gameRunning || gamePaused) return;
 
         if (e.key === 'ArrowLeft') {
             playerCar.moveLeft();
@@ -244,7 +266,59 @@ $(document).ready(() => {
         }
     });
 
+    $('#pause').on('click', function () {
+        gamePaused = true;
+        gameRunning = false;
+
+        gameLoop.forEach(clearInterval);
+        clearInterval(timeInterval);
+        stopScrollingLines();
+
+        activeObstacles.forEach(obj => clearInterval(obj.fallInterval));
+        gameAudio.pause();
+
+        $(this).hide();
+        $('#play').show();
+    });
+
+    $('#play').on('click', function () {
+        gamePaused = false;
+        gameRunning = true;
+
+        resumeScrollingLines();
+
+        timeInterval = setInterval(updateTime, 1000);
+        gameLoop = [
+            setInterval(spawnCab, cabIntervalTime),
+            setInterval(spawnBus, busIntervalTime),
+            setInterval(spawnPM, primeMoverIntervalTime)
+        ];
+
+        activeObstacles.forEach(obj => {
+            obj.fall();
+        });
+
+        gameAudio.play();
+
+        $(this).hide();
+        $('#pause').show();
+    });
+
+    $('#mute').hide();
+    $('#speacker').on('click', () => {
+        gameAudio.pause();
+        $('#speacker').hide();
+        $('#mute').show();
+    });
+
+    $('#mute').on('click', () => {
+        gameAudio.play();
+        $('#mute').hide();
+        $('#speacker').show();
+    });
+
     startCountdown("Let's Go", () => {
         startGameLoop();
+        gameAudio.play();
     });
 });
