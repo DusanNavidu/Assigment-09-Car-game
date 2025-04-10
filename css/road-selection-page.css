@@ -23,6 +23,16 @@ body{
     justify-content: center;
     align-items: center;
 }
+#text-update{
+    position: absolute;
+    top: 96%;
+    left: 52%;
+    color: #fff;
+    font-size: 1.3rem;
+    font-weight: 900;
+    text-align: center;
+
+}
 #one-way-image{
     width: 300px;
 }

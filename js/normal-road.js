@@ -55,6 +55,7 @@ let gameLoop = [];
 let timeInterval;
 let gameRunning = true;
 let gamePaused = false;
+let level = 1;
 
 let cabSpeed = 1;
 let cabIntervalTime = 5000;
@@ -72,7 +73,7 @@ let activeObstacles = [];
 
 let gameAudio = new Audio('/assets/audio/game-music-player-console-8bit-background-intro-theme-297305.mp3');
 gameAudio.loop = true;
-gameAudio.volume = 0.5;
+gameAudio.volume = 1;
 
 function getAvailableLane() {
     let available = lanes.filter((lane, i) => !activeObstaclesInLane[i]);
@@ -89,7 +90,23 @@ function updateTime() {
     if (!gamePaused) {
         timeElapsed++;
         $('#time').text(timeElapsed);
+
+        if (timeElapsed % 60 === 0) {
+            level++;
+            $('#level').text(level);
+            increaseGameDifficulty();
+        }
     }
+}
+
+function increaseGameDifficulty() {
+    cabSpeed *= 1.2;
+    busSpeed *= 1.2;
+    primeMoverSpeed *= 1.2;
+
+    cabIntervalTime = Math.max(3000, cabIntervalTime - 50);
+    busIntervalTime = Math.max(3500, busIntervalTime - 50);
+    primeMoverIntervalTime = Math.max(4000, primeMoverIntervalTime - 50);
 }
 
 function stopScrollingLines() {
@@ -129,8 +146,10 @@ function restartGame() {
 
     score = 0;
     timeElapsed = 0;
+    level = 1; 
     $('#score').text(score);
     $('#time').text(timeElapsed);
+    $('#level').text(level);
     $('#recordMessage').text('');
 
     cabSpeed = 1;
@@ -226,8 +245,10 @@ const spawnPM = createObstacle('primeMover', primeMoverSpeed, primeMoverInterval
 function startGameLoop() {
     timeElapsed = 0;
     score = 0;
+    level = 1; 
     $('#score').text(score);
     $('#time').text(timeElapsed);
+    $('#level').text(level); 
     $('#recordMessage').text('');
 
     timeInterval = setInterval(updateTime, 1000);
@@ -237,18 +258,6 @@ function startGameLoop() {
         setInterval(spawnBus, busIntervalTime),
         setInterval(spawnPM, primeMoverIntervalTime)
     ];
-
-    setInterval(() => {
-        if (gameRunning && !gamePaused) {
-            cabSpeed += 0.05;
-            busSpeed += 0.05;
-            primeMoverSpeed += 0.05;
-
-            cabIntervalTime = Math.max(3000, cabIntervalTime - 50);
-            busIntervalTime = Math.max(3500, busIntervalTime - 50);
-            primeMoverIntervalTime = Math.max(4000, primeMoverIntervalTime - 50);
-        }
-    }, 10000);
 }
 
 $(document).ready(() => {

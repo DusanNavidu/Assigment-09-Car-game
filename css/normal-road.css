@@ -375,3 +375,12 @@ li:nth-child(2){
     transition: 0.5s;
     
 }
+#level-container{
+    font-size: 3rem;
+    color: #fff;
+    font-weight: 900;
+    position: absolute;
+    top: 10%;
+    left: 5%;
+    display: flex;
+}
